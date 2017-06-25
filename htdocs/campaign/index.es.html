@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=utf-8 />
+  <title>Apoya a Mapanica.net - OpenStreetMap Nicaragua</title>
+  <meta name='robots' content='index'/>
+  <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+  <meta name='twitter:site' content='@osm_ni' />
+  <meta property='og:site_name' content='Apoya a Mapanica.net - OpenStreetMap Nicaragua' />
+  <meta name='twitter:url' content='' />
+  <meta name='twitter:domain' content='http://support.mapanica.net/' />
+  <meta property='og:url' content='' />
+  <meta name='twitter:title' content='Apoya a OpenStreetMap Nicaragua' />
+  <meta property='og:title' content='Apoya a OpenStreetMap Nicaragua' />
+  <meta name='twitter:description' content="Asegura tu copia y apoya a la impresión del mapa de transporte colectivo de Managua" />
+  <meta property='og:description' content="Asegura tu copia y apoya a la impresión del mapa de transporte colectivo de Managua" />
+  <meta name='twitter:image' content='http://support.mapanica.net/img/twitter-card-large.jpg' />
+  <meta name='st:image' content='http://support.mapanica.net/img/twitter-card-large.jpg' />
+  <meta property='og:image' content='http://support.mapanica.net/img/twitter-card-large.jpg' />
+  <meta property='og:type' content='website' />
+  <meta name='twitter:card' content='summary_large_image' />
+  <link rel='shortcut icon' href='img/favicon.png' type='image/x-icon' />
+  <link href='base.css' rel='stylesheet' />
+  <link href='site.css' rel='stylesheet' />
+  <script src='js/d3.min.js'></script>
+  <script type="text/javascript" language="javascript">
+    //<![CDATA[
+    var usd_amount_1 = 100;
+    var usd_amount_2 = 50;
+    var usd_amount_3 = 20;
+
+    function formatCurrency(amount, currency) {
+      var currencies = {
+        'USD' : ['$', true],
+        'GBP' : ['£', true],
+        'EUR' : ['€', false],
+        'AUD' : ['$', true],
+        'CAD' : ['$', true],
+        'CHF' : ['Fr', false],
+        'CZK' : ['Kč', false],
+        'DKK' : ['kr', false],
+        'HKD' : ['HK$', true],
+        'HUF' : ['Ft', false],
+        'JPY' : ['¥', true],
+        'NZD' : ['NZ$', true],
+        'NOK' : ['kr', false],
+        'PLN' : ['zł', false],
+        'SGD' : ['S$', true],
+        'SEK' : ['kr', false]
+      };
+
+      var txt = "";
+      if (currencies[currency][1]) {
+        txt += currencies[currency][0];
+      }
+      txt += "" + amount;
+      if (!currencies[currency][1]) {
+        txt += currencies[currency][0];
+      }
+      return txt;
+    }
+
+    function updateCurrencies(select) {
+      var multipliers = {
+        'USD' : 1,
+        'GBP' : 1, // $1.26
+        'EUR' : 1, // $1.26
+        'AUD' : 2, // $1.35
+        'CAD' : 1, // $0.84
+        'CHF' : 1, // $0.85
+        'CZK' : 20, // $1.03
+        'DKK' : 5, // $0.85
+        'HKD' : 10, // $1.29
+        'HUF' : 200, // $0.97
+        'JPY' : 100, // $1
+        'NZD' : 2, // $1.18
+        'NOK' : 10, // $1.44
+        'PLN' : 5, // $1.78
+        'SGD' : 2, // $1.35
+        'SEK' : 10 // $1.28
+      };
+
+      var currency = select.options[select.selectedIndex].value;
+      usd_amount_1 = 20.0 * multipliers[currency];
+      usd_amount_2 = 50.0 * multipliers[currency];
+      usd_amount_3 = 100.0 * multipliers[currency];
+
+      document.getElementById('label_amount_1').innerHTML = formatCurrency(usd_amount_1, currency);
+      document.getElementById('label_amount_2').innerHTML = formatCurrency(usd_amount_2, currency);
+      document.getElementById('label_amount_3').innerHTML = formatCurrency(usd_amount_3, currency);
+
+      document.getElementById('input_amount_other').checked = true;
+    }
+
+    function validateForm( form ) {
+      var minimums = {
+        'USD' : 1,
+        'GBP' : 1, // $1.26
+        'EUR' : 1, // $1.26
+        'AUD' : 2, // $1.35
+        'CAD' : 1, // $0.84
+        'CHF' : 1, // $0.85
+        'CZK' : 20, // $1.03
+        'DKK' : 5, // $0.85
+        'HKD' : 10, // $1.29
+        'HUF' : 200, // $0.97
+        'JPY' : 100, // $1
+        'NZD' : 2, // $1.18
+        'NOK' : 10, // $1.44
+        'PLN' : 5, // $1.78
+        'SGD' : 2, // $1.35
+        'SEK' : 10 // $1.28
+      };
+
+      var error = true;
+
+      // Get amount selection
+      var amount = null;
+      for ( var i = 0; i < form.amount.length; i++ ) {
+        if ( form.amount[i].checked ) {
+          amount = form.amount[i].value;
+        }
+      }
+      if ( form.amountGiven.value != "" ) {
+        amount = form.amountGiven.value;
+      }
+      // Check amount is a real number
+      error = ( amount == null || isNaN( amount ) || amount.value <= 0 );
+      if ( error ) {
+        alert( 'You must enter a valid amount.' );
+      }
+
+      // Check amount is at least the minimum
+      var currency = form.currency_code[form.currency_code.selectedIndex].value;
+      if ( typeof( minimums[currency] ) == 'undefined' ) {
+        minimums[currency] = 1;
+      }
+      if ( amount < minimums[currency] ) {
+        alert( 'You must contribute at least $1'.replace('$1', minimums[currency] + ' ' + currency ) );
+        error = true;
+      }
+
+      // Track form submission as a piwik goal
+      if ( !error ) {
+        _paq.push(['trackGoal', 1]);
+      }
+
+      return !error;
+    }
+    //]]>
+  </script>
+</head>
+<!-- <body class='fill-darkgreen bg-hardware'> -->
+<body class='fill-page'>
+
+  <div class='limiter clearfix'>
+
+    <div id='banner-pic' class='col12 clearfix round-top'>
+
+      <div class='fill-transparent-black col4 clearfix round-top'>
+
+        <div class='col12 clearfix pad2x contain keyline-bottom round-top'>
+          <img class='logo' src='img/mapanica_logo.png'>
+        </div>
+
+        <div class='pad2'>
+          <h2>Apoya a la impresión del mapa colaborativo de transporte colectivo de Managua</h2>
+        </div>
+      </div>
+      <div class='col2 clearfix round-top language-selector'>
+        <ul>
+          <li><a href="/index.html">English</a></li>
+          <li class="active"><a href="/index.es.html">Español</a></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <div class='limiter clearfix'>
+    <div class='col4 fr fill-white pad4 keyline-left round-right sidebar'>
+
+      <div class='space-bottom1'>
+        <small>
+          Nuestra iniciative de crowd-funding ha terminado.
+        </small><br /><br />
+        <center><h2>Recibimos <span id='js-raised'>$0</span></h2></center>
+        <div class='strong center pad1y'>
+          <small>Gracias a</small> <span id='js-backers'>0</span> <small>donantes</small>
+        </div>
+      </div>
+
+      <small>
+        Las donaciones fueron recibidas por nuestro colaborador oficial: <a target="_blank" href="http://hotosm.org"><img style="width:100%;" src="/img/hot_logo.png" /></a>
+      </small>
+
+
+    </div>
+    <div class='col8 fr'>
+      <div class='pad2 fill-white round-bottom'>
+
+        <div class='tabs col12 keyline-bottom space-bottom2'>
+             <a href='#about' class='inline pad1 active'>Acerca de</a>
+             <a href='#rewards' class='inline pad1'>Recompensas</a>
+             <a href='#faq' class='inline pad1'>Preguntas</a>
+             <a href='/corporate.es.html' class='inline pad1'>Patrocinio</a>
+        </div>
+
+
+        <div class='prose sliding h active1'>
+
+          <!-- Tab one -->
+          <div>
+            <p>
+              Actualmente <strong>no existe ningún mapa que muestre las 45 rutas
+              de autobuses de Managua y Ciudad Sandino</strong>, a pesar de que
+              el 80% de los <strong>dos millones de habitantes</strong> depende de los autobuses
+              para ir a su trabajo o escuela. Fácilmente se desorientan al
+              querer transportarse en un autobús que no recorre sus rutas habituales.<br /><br />
+              En los dos últimos años, el proyecto recibió el apoyo de <strong>más de
+              150 voluntarios</strong>, los cuales se encargaron de hacer el <strong>levantamiento
+              de información del recorrido de las 45 rutas</strong> de la ciduad de
+              Managua y Ciudad Sandino. Actualmente estamos trabajando en el
+              diseño de un mapa de rutas que pueda ser de fácil manejo para todos
+              los usuarios sin importar que sean de Managua o de cualquier parte
+              del país. Nuestra primer meta es <strong>imprimir veinte mil ejemplares</strong>
+              para ser distribuidos de manera gratuita.<br /><br />
+              <strong>Solicitamos tu apoyo</strong> para poder hacer real este sueño, todo apoyo
+              es bienvenido y como muestra de nuestro aprecio, los <a href="#rewards">recompensaremos
+              con el envió de nuestro mapa impreso o una camiseta exclusiva</a> con
+              nuestro mapa de rutas en ella. Este proyecto no habría sido posible
+              sin las personas que quieren hacer un cambio en su comunidad
+              aprovechando las Tecnologías Libres.
+            </p>
+            <p>
+              <img width="640" src="/img/transport_map.jpg" />
+            </p>
+            <p>
+              <h5>Colaboración:</h5>
+              <p>
+                Éste proyecto nace con la colaboración de un grupo de personas,
+                entre estas estudiantes y ciudadanos, entusiastas de mapeo, que
+                decidieron unirse para desarrollar éste proyecto, el cual fue
+                trabajado con la infraestructura y las herramientas del proyecto
+                <a href="http://openstreetmap.org" target="_blank">OpenStreetMap</a>,
+                ya que este cumplía con nuestras necesidades.<br /><br />
+                Todos pusimos nuestro esfuerzo en conjunto, recolectando la
+                información geográfica y los datos de las rutas realizadas por
+                todos los autobuses. Nuestra motivación es poder crear el primer
+                mapa de rutas de Managua y que éste ayude a mejorar la movilidad
+                dentro de la ciudad tanto para los pobladores locales como los extranjeros.
+              </p>
+            </p>
+            <p>
+              <img width="640" src="/img/bus_mapping.jpg" />
+            </p>
+            <p>
+              <h5>Datos Abiertos</h5>
+              <p>
+                Desde ya hemos compartido nuestro trabajo, los datos ya están
+                <a href="http://mapanica.net/rutas-managua.html" target="_blank">
+                publicados y disponibles</a> en OpenStreetMap. Consideramos el acceso a la
+                información es importante, de esta manera garantizamos la
+                sostenibilidad de éste gran esfuerzo. Los invitamos a todos los
+                que quieran <a href="http://overpass-turbo.eu/s/cpl">descargarlo</a>,
+                la publicación de nuestro proyecto esta con  <a href="https://www.openstreetmap.org/copyright">licencia libre</a>,
+                que permite que creen innovación sobre ellos.
+              </p>
+            </p>
+            <p>
+              <h5>Diseño del mapa impreso</h5>
+              <p>
+                Cuando empezamos a diseñar el mapa, buscamos información sobre
+                experiencias prévias en proyectos similares. Tuvimos la
+                fortuna de encontrar el proyecto  <a target="_blank" href="http://www.digitalmatatus.com/about.html">
+                Digital Matatus</a> de Nairobi, que fue nuestra inspiración principal
+                para el diseño. En particular, la forma de visualizar el “<i>transito informal</i>”,
+                el cual aplica perfectamente al que tenemos Nicaragua.<br /><br />
+                Sin embargo fue un gran reto organizar de manera creativa el
+                sistema de rutas para la elaboración del mapa. La preocupación
+                principal era como presentar de manera comprensible el sistema
+                de rutas para que la gente pueda leer sin problemas la información,
+                incluso contemplando casos de <strong>personas que nunca han usado un mapa</strong>.
+              </p>
+            </p>
+            <!-- <img width="640" height="360" src="/img/raw_lines.jpg" /> -->
+
+            <div class='space-bottom4'>
+            </div>
+
+            <h3>Listado de donantes</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Cantidad</th>
+                  <th>Mensaje</th>
+                </tr>
+              </thead>
+              <tbody id='donor-list'></tbody>
+            </table>
+          </div>
+
+          <!-- Tab two -->
+          <div>
+            <h2>Recompensas</h2>
+            <p>
+              Agradecemos tu apoyo y por eso te recompensamos. <strong>Toda
+              donación tiene un impacto positivo en nuestra comunidad,</strong> todo lo
+              donado será utilizado para cubrir los gastos y mano de obra profesional
+              para lograr la impresión de nuestro mapa de rutas de Managua.
+            </p>
+            <p>
+              No importa desde donde nos envíes tu donación, <strong>tu suvenir igual
+              llegará hasta donde estés</strong>.
+            </p>
+            <p>
+              Actualmente estamos en la fase final del diseño de nuestro mapa
+              de rutas, una vez terminemos el mapa, asi que los diseños de los
+              productos que llevan una versión exclusiva del mapa serán
+              actualizados a la última versión.
+            </p>
+
+            <h4>Dé $20 a más</h4>
+            <p>Obtenga dos planos impresos del transporte público de Managua.
+            <img width="640" src="/img/reward-map.jpg" /></p>
+
+
+            <h4>Dé $50 a más</h4>
+            <p>Obtenga dos planos impresos del transporte público y un bolso de tela.
+              <img width="640" src="/img/reward-jute.jpg" />
+            </p>
+
+            <h4>Dé $100 a más</h4>
+            <p>Obtenga tdos planos impresos del transporte público, un bolso de tela y una
+              camiseta.
+              <img width="640" src="/img/reward-t-shirt.jpg" />
+            </p>
+            <h4>Dé $250 a más</h4>
+            <p>Obtenga dos planos impresos del transporte público, un bolso de tela, una
+              camiseta y una memoria USB de MapaNica.net.
+              <img width="640" src="/img/reward-usb.jpg" />
+            </p>
+          </div>
+
+          <!-- Tab three -->
+          <div>
+            <h2>Preguntas frequentes</h2>
+
+            <h4>¿Qué es MapaNica.net?</h4>
+            <p>MapaNica es el capitulo Nicargüense de OpenStreetMap. Está formado por una comunidad de entusiastas de información geográfica que han optado por utilizar las nuevas tecnologías libres. Es un grupo muy diverso que incluye cartógrafos profesionales, empresas, organizaciones sin fines de lucro, programadores, estudiantes de diversas carreras, y otros ciudadanos que utilizan las herramientas de participación para ayudar a compartir información geográfica. La comunidad MapaNica tiene como objetivo crear y distribuir el mejor mapa de Nicaragua sin ningún tipo de restricciones y de forma colaborativa y libre.</p>
+
+            <h4>¿Son una organización registrada y sin fines de lucro?</h4>
+            <p>Éste proyecto del mapa de transporte se realiza en colaboración con el <a href='//hotosm.org/about'>equipo humanitario de OpenStreetMap (Humanitarian OpenStreetMap Team)</a>, que es una organización registrada en Estados Unidos sin fines de lucro que apoya a la cartografía en el contexto humanitario en todo el mundo. Se trata de una incorporación constituida según 501(c)(3) sin fines de lucro y reconocida por del Código de Rentas Internas del Servicio de Rentas Internas Federales (IRS).</p>
+
+      		  <h4>¿Es posible que empresas apoyen está iniciativa?</h5>
+            <p>
+              ¡Si por supuesto! Estamos felices de honrar un patrocinio con el
+              logotipo de la institución en el mapa impreso. Por favor, <a href='mailto:contacto@mapanica.net'>póngase
+              en contacto</a> con nosotros para más detalles.</p>
+
+            <h4>¿Cómo puedo donar más?</h4>
+            <p><a href='mailto:contacto@mapanica.net'>Contáctenos</a></p>
+
+            <h4>Soy de Nicaragua y no puedo usar Paypal. ¿Cómo les puedo apoyar?</h5>
+            <p>Por favor, <a href='mailto:contacto@mapanica.net'>póngase en contacto</a> y juntos encontramos la forma más conveniente.</p>
+          </div>
+        </div> <!-- closes <div class='prose sliding h active1'> -->
+      </div> <!-- closes <div class='pad2 fill-white round-bottom'> -->
+    </div> <!-- closes <div class='col8 fr'> -->
+  </div> <!-- closes <div class='limiter clearfix'> -->
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" type="text/javascript" ></script>
+  <script src='site.js'></script>
+  <!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(["trackPageView"]);
+  _paq.push(["enableLinkTracking"]);
+
+  (function() {
+    var u=(("https:" == document.location.protocol) ? "https" : "http") + "://stats.delattre.de/";
+    _paq.push(["setTrackerUrl", u+"piwik.php"]);
+    _paq.push(["setSiteId", "7"]);
+    var d=document, g=d.createElement("script"), s=d.getElementsByTagName("script")[0]; g.type="text/javascript";
+    g.defer=true; g.async=true; g.src=u+"piwik.js"; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Piwik Code -->
+</body>
+</html>
